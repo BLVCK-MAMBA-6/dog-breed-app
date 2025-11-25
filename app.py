@@ -94,25 +94,58 @@ def add_custom_css():
             background: rgba(30, 30, 46, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(96, 165, 250, 0.3);
-            padding: 30px;
+            padding: 20px;
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             text-align: center;
-            margin-top: 25px;
-            margin-bottom: 25px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .result-card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        
+        .result-card h1 {
+            font-size: 2.2rem;
+            margin-top: 0;
         }
         
         /* Modern info box */
         .fun-fact-box {
             background: rgba(59, 130, 246, 0.1);
             border: 1px solid rgba(96, 165, 250, 0.3);
-            padding: 20px;
+            padding: 16px;
             border-radius: 12px;
             border-left: 4px solid #60a5fa;
-            margin-top: 20px;
-            font-size: 1.05rem;
+            margin-top: 16px;
+            font-size: 0.95rem;
             color: #d1d5db;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+        
+        .fact-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .refresh-btn {
+            background: rgba(96, 165, 250, 0.2);
+            border: 1px solid rgba(96, 165, 250, 0.4);
+            color: #60a5fa;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: rgba(96, 165, 250, 0.3);
+            border-color: rgba(96, 165, 250, 0.6);
         }
         
         /* Clean file uploader */
@@ -226,8 +259,8 @@ def preprocess_image(image_pil):
     return np.expand_dims(image_array, axis=0)
 
 # --- 6. Main App ---
-st.title("🐾 Dog Breed Identifier 🐾")
-st.markdown("<h4 style='text-align: center; color: #888;'>Upload a photo and I'll guess the breed! 📸</h4>", unsafe_allow_html=True)
+st.title("🐾 Dog Breed Identifier")
+st.markdown("<h4 style='text-align: center; color: #888;'>Upload a photo and I'll identify the breed 📸</h4>", unsafe_allow_html=True)
 
 if model is None or class_names is None:
     st.error("⚠️ Could not load model. Please check files.")
@@ -252,8 +285,8 @@ else:
                 
                 # --- LOGIC: Is this actually a dog? ---
                 if top_confidence < CONFIDENCE_THRESHOLD:
-                    st.warning(f"🤔 Hmm... I'm only **{top_confidence*100:.1f}%** sure about this.")
-                    st.info("This might not be a dog, or it's a breed I haven't learned yet! Try a clearer photo.")
+                    st.warning(f"🤔 Only **{top_confidence*100:.1f}%** confident about this prediction.")
+                    st.info("This might not be a dog, or it's an uncommon breed. Try a clearer photo.")
                 else:
                     # Apply Manual Overrides (Fixing Husky/Eskimo confusion)
                     if raw_breed in BREED_OVERRIDES:
@@ -261,24 +294,32 @@ else:
                     else:
                         display_name = raw_breed.replace('_', ' ').title()
 
-                    # Generate Fun Fact
-                    fun_fact = generate_fun_fact(display_name)
-
+                    # Store display name in session state for regeneration
+                    if 'current_breed' not in st.session_state or st.session_state.current_breed != display_name:
+                        st.session_state.current_breed = display_name
+                        st.session_state.fun_fact = generate_fun_fact(display_name)
                     
                     st.markdown(f"""
                     <div class="result-card">
-                        <h2>I'm {top_confidence*100:.0f}% sure it's a...</h2>
-                        <h1 style="color: #60a5fa;">{display_name}!</h1>
+                        <h2>{top_confidence*100:.0f}% confident it's a</h2>
+                        <h1 style="color: #60a5fa;">{display_name}</h1>
                     </div>
                     """, unsafe_allow_html=True)
 
-                    st.markdown(f"""
-                    <div class="fun-fact-box">
-                        <b>💡 Gemini Fun Fact:</b> {fun_fact}
-                    </div>
-                    """, unsafe_allow_html=True)
+                    # Fun fact with refresh button
+                    col_fact, col_btn = st.columns([4, 1])
+                    with col_fact:
+                        st.markdown(f"""
+                        <div class="fun-fact-box">
+                            <b>💡 Fun Fact:</b> {st.session_state.fun_fact}
+                        </div>
+                        """, unsafe_allow_html=True)
+                    with col_btn:
+                        if st.button("🔄", help="Get new fact"):
+                            st.session_state.fun_fact = generate_fun_fact(display_name)
+                            st.rerun()
                     
-                    with st.expander("📊 See other possibilities"):
+                    with st.expander("📊 Other possibilities"):
                         top_5_indices = np.argsort(predictions[0])[-5:][::-1]
                         for idx in top_5_indices:
                             breed_name = class_names[idx]
