@@ -10,7 +10,7 @@ import google.generativeai as genai
 
 # --- Page Config ---
 st.set_page_config(
-    page_title="Dog Breed Identifier",
+    page_title="Doggo Identifier",
     page_icon="🐾",
     layout="centered"
 )
@@ -26,161 +26,135 @@ NUM_CLASSES = 120
 MODULE_HANDLE = "https://tfhub.dev/google/imagenet/mobilenet_v2_130_224/classification/5"
 WEIGHTS_FILE = "20251112-08421762936925_full-image-set-mobilenetv2-Adam.h5"
 CLASSES_FILE = "class_names.json"
-CONFIDENCE_THRESHOLD = 0.30
 
-# --- Breed Corrections ---
+# --- 🧠 SMART LOGIC SETTINGS ---
+# 1. The "Not a Dog" Filter
+# If confidence is below 60%, we assume it's not a dog (or a very blurry one).
+CONFIDENCE_THRESHOLD = 0.60  
+
+# 2. Breed Correction Dictionary
+# We map the model's technical names to friendlier, more accurate labels.
+# This fixes the "Husky vs Eskimo" and "Beagle vs Foxhound" confusion.
 BREED_OVERRIDES = {
-    "eskimo_dog": "American Eskimo / Husky Mix",
+    "eskimo_dog": "Husky / American Eskimo Mix",
+    "siberian_husky": "Siberian Husky",
+    "malamute": "Alaskan Malamute",
+    "english_foxhound": "English Foxhound / Beagle", 
+    "walker_hound": "Treeing Walker Coonhound",
     "blenheim_spaniel": "Cavalier King Charles Spaniel",
-    "boston_bull": "Boston Terrier"
+    "boston_bull": "Boston Terrier",
+    "wire-haired_fox_terrier": "Wire Fox Terrier"
 }
 
 # --- 1. Gemini Fun Fact Generator ---
 def generate_fun_fact(breed):
+    """Generates a fun fact using Gemini 2.5 Flash."""
     try:
+        # Retrieve key from Streamlit Secrets
         if "GEMINI_API_KEY" in st.secrets:
             api_key = st.secrets["GEMINI_API_KEY"]
             genai.configure(api_key=api_key)
+            
             model = genai.GenerativeModel('gemini-2.5-flash')
-            prompt = f"Give me one short, fun, and cute fact about the {breed} dog breed. Keep it under 30 words. Use emojis!"
+            prompt = f"Tell me a fun, cute, and surprising fact about the {breed} dog breed. Keep it under 40 words. Include emojis!"
+            
             response = model.generate_content(prompt)
             return response.text
         else:
-            return f"The {breed} is a good boy/girl! (API Key missing for fresh facts!)"
+            return f"The {breed} is a good boy/girl! (Add API Key to secrets for dynamic facts!)"
     except Exception as e:
-        return f"The {breed} is a good boy/girl! (We couldn't fetch a new fact right now, but they are amazing!)"
+        return f"The {breed} is a wonderful dog! (Gemini is taking a nap right now 😴)"
 
-# --- 2. Custom CSS (Centering Fix + Glow Effect) ---
+# --- 2. Beautiful UI Styling ---
 def add_custom_css():
     st.markdown("""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap');
         
-        /* 1. BACKGROUND */
         .stApp {
-            background-color: #121212; 
-            font-family: 'Inter', sans-serif;
-            color: #E0E0E0;
+            background-color: #FFF5F7;
+            background-image: radial-gradient(#FFE4E1 1px, transparent 1px);
+            background-size: 20px 20px;
+            font-family: 'Nunito', sans-serif;
         }
         
-        /* 2. HEADER STYLING (Centered & Glowing) */
-        h1 {
-            font-weight: 800;
-            letter-spacing: -1px;
-            color: #FFFFFF;
-            text-align: center !important; /* Forces centering */
-            font-size: 3rem !important;
-            margin-bottom: 0;
-            text-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); /* Beautiful glow */
+        h1 { 
+            font-family: 'Fredoka One', cursive; 
+            color: #FF6B6B; 
+            text-align: center; 
+            text-shadow: 2px 2px 0px #FFE66D; 
+            font-size: 3rem;
+            margin-bottom: 10px;
         }
         
-        /* Subtitle styling */
         .subtitle {
             text-align: center;
-            color: #9CA3AF;
-            font-size: 1rem;
-            margin-top: -10px;
-            margin-bottom: 2rem;
-            font-weight: 400;
+            color: #888;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
         }
         
-        /* 3. COMPACT RESULT CARD */
+        /* Card Styling */
         .result-card {
-            background-color: #1E1E1E;
-            border: 1px solid #333333;
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: left;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            border-left: 4px solid #6366F1;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-        }
-
-        .result-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .confidence-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #9CA3AF;
-            margin-bottom: 4px;
-        }
-
-        .breed-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #FFFFFF;
-            margin: 0;
-        }
-
-        .confidence-badge {
-            background-color: #312E81;
-            color: #A5B4FC;
-            padding: 5px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
+            background-color: white;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            border: 4px solid #FFD93D;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            animation: fadeIn 1s;
         }
         
-        /* 4. FUN FACT BOX */
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Fun Fact Box */
         .fun-fact-box {
-            background-color: #18181b;
-            border: 1px solid #27272a;
-            padding: 1rem;
-            border-radius: 8px;
-            color: #d4d4d8;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-top: 0.5rem;
+            background-color: #E0F7FA;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 8px solid #4ECDC4;
+            margin-top: 15px;
+            font-size: 1.1rem;
+            color: #006064;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
-
-        /* 5. UPLOAD AREA */
-        .stFileUploader > div > div {
-            background-color: #1E1E1E;
-            border: 1px dashed #4B5563;
+        
+        /* Upload Widget */
+        .stFileUploader { padding: 20px; }
+        
+        /* Image Styling */
+        img { 
+            border-radius: 15px; 
+            border: 4px solid #FF6B6B; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
         }
-        .stFileUploader > div > div:hover {
-            border-color: #6366F1;
-        }
-
-        /* 6. BUTTONS */
+        
+        /* Button Styling */
         .stButton button {
-            background-color: #6366F1;
+            background-color: #FF6B6B;
             color: white;
+            border-radius: 12px;
+            font-family: 'Fredoka One', cursive;
             border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: background 0.3s, transform 0.1s;
+            padding: 10px 24px;
+            font-size: 16px;
         }
         .stButton button:hover {
-            background-color: #4F46E5;
-            transform: scale(1.02);
-        }
-
-        /* 7. IMAGE BORDER */
-        img {
-            border-radius: 12px;
-            border: 1px solid #333;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        
-        /* 8. Progress Bars for alternatives */
-        .stProgress > div > div > div > div {
-            background-color: #6366F1;
+            background-color: #FF5252;
+            transform: scale(1.05);
+            transition: all 0.2s;
         }
         </style>
     """, unsafe_allow_html=True)
 
 add_custom_css()
 
-# --- 3. Model Definition ---
+# --- 3. Model Architecture ---
 def create_model(module_handle, num_classes):
     feature_extractor_layer = hub.KerasLayer(module_handle, trainable=False, name="feature_extraction_layer")
     model = tf.keras.Sequential([
@@ -192,7 +166,7 @@ def create_model(module_handle, num_classes):
     ])
     return model
 
-# --- 4. Load Model ---
+# --- 4. Load Resources ---
 @st.cache_resource
 def load_model_and_classes():
     try:
@@ -202,7 +176,7 @@ def load_model_and_classes():
             class_names = json.load(f)
         return model, class_names
     except Exception as e:
-        st.error(f"Error loading resources: {e}")
+        st.error(f"Critical Error: {e}")
         return None, None
 
 model, class_names = load_model_and_classes()
@@ -216,86 +190,75 @@ def preprocess_image(image_pil):
     image_array = image_array.astype(np.float32) / 255.0
     return np.expand_dims(image_array, axis=0)
 
-# --- 6. Main App ---
+# --- 6. Main App Logic ---
+st.title("🐾 Dog Breed Identifier 🐾")
+st.markdown('<div class="subtitle">Upload a photo and let AI guess the breed! 📸</div>', unsafe_allow_html=True)
 
-# Replaced st.title with HTML for perfect centering and the Paw Emoji
-st.markdown("<h1>🐾 Dog Breed Identifier</h1>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>AI-powered canine classification</p>", unsafe_allow_html=True)
+if model and class_names:
+    uploaded_file = st.file_uploader(" ", type=["jpg", "jpeg", "png"])
 
-if model is None or class_names is None:
-    st.error("⚠️ Could not load model. Please check files.")
-else:
-    # Centered File Uploader
-    col_spacer_l, col_main, col_spacer_r = st.columns([1, 4, 1])
-    with col_main:
-        uploaded_file = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
-
-    if uploaded_file is not None:
+    if uploaded_file:
         try:
-            st.markdown("---") # Visual separator
-            # Layout: Image Left, Card Right
-            col1, col2 = st.columns([1, 1.2])
-            
-            with col1:
+            # Layout: Image on top/center
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
                 image = Image.open(uploaded_file)
                 st.image(image, use_column_width=True)
             
-            with col2:
-                with st.spinner('Analyzing...'):
-                    preprocessed_image = preprocess_image(image)
-                    predictions = model.predict(preprocessed_image, verbose=0)
+            with st.spinner('🧠 AI is thinking...'):
+                preprocessed_image = preprocess_image(image)
+                predictions = model.predict(preprocessed_image, verbose=0)
+                
+                top_prediction_index = np.argmax(predictions)
+                top_confidence = predictions[0][top_prediction_index]
+                raw_breed = class_names[top_prediction_index]
+                
+                # --- SMART CHECK: Is it a dog? ---
+                if top_confidence < CONFIDENCE_THRESHOLD:
+                    st.warning(f"⚠️ **I'm unsure ({top_confidence*100:.1f}% confidence).**")
+                    st.info("This might not be a dog, or it's a mixed breed I haven't studied yet. Try a clearer photo!")
+                
+                else:
+                    # --- SUCCESS! ---
                     
-                    top_prediction_index = np.argmax(predictions)
-                    top_confidence = predictions[0][top_prediction_index]
-                    raw_breed = class_names[top_prediction_index]
-                    
-                    if top_confidence < CONFIDENCE_THRESHOLD:
-                        st.warning(f"Uncertain prediction ({top_confidence*100:.1f}%).")
-                        st.caption("Try a clearer photo or a different angle.")
+                    # 1. Apply Smart Overrides (Fixing confusions)
+                    if raw_breed in BREED_OVERRIDES:
+                        display_name = BREED_OVERRIDES[raw_breed]
                     else:
-                        if raw_breed in BREED_OVERRIDES:
-                            display_name = BREED_OVERRIDES[raw_breed]
-                        else:
-                            display_name = raw_breed.replace('_', ' ').title()
+                        display_name = raw_breed.replace('_', ' ').title()
 
-                        # Session State
-                        if 'current_breed' not in st.session_state or st.session_state.current_breed != display_name:
-                            st.session_state.current_breed = display_name
-                            st.session_state.fun_fact = generate_fun_fact(display_name)
-                        
-                        # --- RESULT CARD ---
-                        st.markdown(f"""
-                        <div class="result-card">
-                            <div class="result-info">
-                                <span class="confidence-label">Best Match</span>
-                                <h3 class="breed-title">{display_name}</h3>
-                            </div>
-                            <div class="confidence-badge">
-                                {top_confidence*100:.0f}% Match
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                    # 2. Get Fun Fact from Gemini
+                    fun_fact = generate_fun_fact(display_name)
 
-                        # --- FUN FACT ---
-                        st.markdown(f"""
-                        <div class="fun-fact-box">
-                            <b>💡 AI Insight:</b> {st.session_state.fun_fact}
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        if st.button("Regenerate Fact", key="refresh_fact"):
-                            st.session_state.fun_fact = generate_fun_fact(display_name)
-                            st.rerun()
-                            
-                        # --- DROPDOWN ---
-                        with st.expander("See Alternative Matches"):
-                            top_5_indices = np.argsort(predictions[0])[-5:][::-1]
-                            for idx in top_5_indices:
-                                if idx == top_prediction_index: continue
-                                b_name = class_names[idx]
-                                b_name = BREED_OVERRIDES.get(b_name, b_name.replace('_', ' ').title())
-                                conf = predictions[0][idx] * 100
-                                st.progress(int(conf), text=f"{b_name} ({conf:.1f}%)")
+                    # 3. Celebration
+                    st.balloons()
+                    
+                    # 4. Result Card
+                    st.markdown(f"""
+                    <div class="result-card">
+                        <h2 style="margin:0;">It looks like a...</h2>
+                        <h1 style="color: #4ECDC4; font-size: 2.5rem;">{display_name}</h1>
+                        <p style="color: #666;">Confidence: <b>{top_confidence*100:.1f}%</b></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    # 5. Fun Fact Card
+                    st.markdown(f"""
+                    <div class="fun-fact-box">
+                        <b>🤖 Gemini says:</b> {fun_fact}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # 6. Expandable Stats
+                    with st.expander("📊 View Detailed Analysis"):
+                        top_5_indices = np.argsort(predictions[0])[-5:][::-1]
+                        for idx in top_5_indices:
+                            breed = class_names[idx]
+                            # Show the friendly name in stats too
+                            name = BREED_OVERRIDES.get(breed, breed.replace('_', ' ').title())
+                            conf = predictions[0][idx] * 100
+                            st.progress(int(conf))
+                            st.write(f"**{name}**: {conf:.2f}%")
 
         except Exception as e:
-            st.error(f"Error processing image: {e}")
+            st.error(f"Something went wrong: {e}")
