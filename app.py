@@ -29,7 +29,7 @@ CLASSES_FILE = "class_names.json"
 
 # --- SMART LOGIC SETTINGS ---
 # 1. Threshold: Reject predictions below 60% (Option A)
-CONFIDENCE_THRESHOLD = 0.85
+CONFIDENCE_THRESHOLD = 0.60
 
 # 2. Breed Corrections (Fixing known confusions)
 BREED_OVERRIDES = {
@@ -273,6 +273,9 @@ else:
                         if 'current_breed' not in st.session_state or st.session_state.current_breed != display_name:
                             st.session_state.current_breed = display_name
                             st.session_state.fun_fact = generate_fun_fact(display_name)
+                        
+                        # 3. Celebration
+                        st.balloons()
 
                         # 4. RESULT CARD
                         st.markdown(f"""
