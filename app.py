@@ -185,7 +185,7 @@ def add_custom_css():
 
 add_custom_css()
 
-# --- 3. Model Definition ---
+# --- 3. Model Architecture ---
 def create_model(module_handle, num_classes):
     feature_extractor_layer = hub.KerasLayer(module_handle, trainable=False, name="feature_extraction_layer")
     model = tf.keras.Sequential([
@@ -197,7 +197,7 @@ def create_model(module_handle, num_classes):
     ])
     return model
 
-# --- 4. Load Model ---
+# --- 4. Load Resources ---
 @st.cache_resource
 def load_model_and_classes():
     try:
@@ -274,8 +274,8 @@ else:
                             st.session_state.current_breed = display_name
                             st.session_state.fun_fact = generate_fun_fact(display_name)
                         
-                        # 3. Celebration
-                        st.balloons()
+                        # 3. Celebration (REMOVED)
+                        # st.balloons() # Removed as requested
 
                         # 4. RESULT CARD
                         st.markdown(f"""
