@@ -26,13 +26,18 @@ NUM_CLASSES = 120
 MODULE_HANDLE = "https://tfhub.dev/google/imagenet/mobilenet_v2_130_224/classification/5"
 WEIGHTS_FILE = "20251112-08421762936925_full-image-set-mobilenetv2-Adam.h5"
 CLASSES_FILE = "class_names.json"
-CONFIDENCE_THRESHOLD = 0.30
 
-# --- Breed Corrections ---
+# --- SMART LOGIC SETTINGS ---
+# 1. Threshold: Reject predictions below 60% (Option A)
+CONFIDENCE_THRESHOLD = 0.60
+
+# 2. Breed Corrections (Fixing known confusions)
 BREED_OVERRIDES = {
     "eskimo_dog": "American Eskimo / Husky Mix",
     "blenheim_spaniel": "Cavalier King Charles Spaniel",
-    "boston_bull": "Boston Terrier"
+    "boston_bull": "Boston Terrier",
+    "english_foxhound": "English Foxhound / Beagle",
+    "walker_hound": "Treeing Walker Coonhound"
 }
 
 # --- 1. Gemini Fun Fact Generator ---
@@ -249,21 +254,30 @@ else:
                     top_confidence = predictions[0][top_prediction_index]
                     raw_breed = class_names[top_prediction_index]
                     
+                    # --- SMART CHECK (OPTION A LOGIC) ---
+                    # If confidence is too low, we assume it's not a dog.
                     if top_confidence < CONFIDENCE_THRESHOLD:
-                        st.warning(f"Uncertain prediction ({top_confidence*100:.1f}%).")
-                        st.caption("Try a clearer photo or a different angle.")
+                        st.warning(f"⚠️ **Uncertain prediction ({top_confidence*100:.1f}%).**")
+                        st.info("This doesn't look like a dog breed I know! Try a clearer photo of a dog.")
+                    
                     else:
+                        # --- SUCCESS LOGIC ---
+                        
+                        # 1. Apply Overrides
                         if raw_breed in BREED_OVERRIDES:
                             display_name = BREED_OVERRIDES[raw_breed]
                         else:
                             display_name = raw_breed.replace('_', ' ').title()
 
-                        # Session State
+                        # 2. Session State Logic (Avoid re-generating facts on rerun)
                         if 'current_breed' not in st.session_state or st.session_state.current_breed != display_name:
                             st.session_state.current_breed = display_name
                             st.session_state.fun_fact = generate_fun_fact(display_name)
                         
-                        # --- RESULT CARD ---
+                        # 3. Celebration
+                        st.balloons()
+
+                        # 4. RESULT CARD
                         st.markdown(f"""
                         <div class="result-card">
                             <div class="result-info">
@@ -276,7 +290,7 @@ else:
                         </div>
                         """, unsafe_allow_html=True)
 
-                        # --- FUN FACT ---
+                        # 5. FUN FACT
                         st.markdown(f"""
                         <div class="fun-fact-box">
                             <b>💡 AI Insight:</b> {st.session_state.fun_fact}
@@ -287,7 +301,7 @@ else:
                             st.session_state.fun_fact = generate_fun_fact(display_name)
                             st.rerun()
                             
-                        # --- DROPDOWN ---
+                        # 6. ALTERNATIVES DROPDOWN
                         with st.expander("See Alternative Matches"):
                             top_5_indices = np.argsort(predictions[0])[-5:][::-1]
                             for idx in top_5_indices:
