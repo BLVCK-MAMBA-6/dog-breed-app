@@ -7,7 +7,6 @@ import json
 import warnings
 import os
 import google.generativeai as genai
-from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input, decode_predictions
 
 # --- Page Config ---
 st.set_page_config(
@@ -186,7 +185,7 @@ def add_custom_css():
 
 add_custom_css()
 
-# --- 3. Model Definition ---
+# --- 3. Model Architecture ---
 def create_model(module_handle, num_classes):
     feature_extractor_layer = hub.KerasLayer(module_handle, trainable=False, name="feature_extraction_layer")
     model = tf.keras.Sequential([
@@ -198,7 +197,7 @@ def create_model(module_handle, num_classes):
     ])
     return model
 
-# --- 4. Load Model ---
+# --- 4. Load Resources ---
 @st.cache_resource
 def load_model_and_classes():
     try:
@@ -211,13 +210,7 @@ def load_model_and_classes():
         st.error(f"Error loading resources: {e}")
         return None, None
 
-@st.cache_resource
-def load_dog_detector():
-    """Load MobileNetV2 for dog detection pre-screening"""
-    return MobileNetV2(weights='imagenet')
-
 model, class_names = load_model_and_classes()
-dog_detector = load_dog_detector()
 
 # --- 5. Preprocessing ---
 def preprocess_image(image_pil):
@@ -227,37 +220,6 @@ def preprocess_image(image_pil):
     elif image_array.shape[2] == 4: image_array = image_array[:, :, :3]
     image_array = image_array.astype(np.float32) / 255.0
     return np.expand_dims(image_array, axis=0)
-
-def is_dog_in_image(image_pil, detector):
-    """
-    Pre-screen image to check if it contains a dog using ImageNet classifier.
-    Returns True if a dog is detected, False otherwise.
-    """
-    # Resize for MobileNetV2
-    img = image_pil.resize((224, 224))
-    img_array = np.array(img)
-    
-    # Handle grayscale/RGBA
-    if len(img_array.shape) == 2:
-        img_array = np.stack([img_array] * 3, axis=-1)
-    elif img_array.shape[2] == 4:
-        img_array = img_array[:, :, :3]
-    
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array = preprocess_input(img_array)
-    
-    # Get predictions
-    preds = detector.predict(img_array, verbose=0)
-    decoded = decode_predictions(preds, top=5)[0]
-    
-    # Check if any top-5 prediction is a dog breed (ImageNet classes 151-268 are dogs)
-    for _, class_name, score in decoded:
-        # Check if prediction is a dog-related class
-        if any(dog_word in class_name.lower() for dog_word in ['dog', 'puppy', 'hound', 'terrier', 'retriever', 'shepherd', 'spaniel', 'poodle', 'bulldog', 'beagle', 'chihuahua', 'husky', 'corgi', 'dachshund', 'pug', 'collie', 'setter', 'pointer']):
-            if score > 0.1:  # At least 10% confidence it's a dog
-                return True
-    
-    return False
 
 # --- 6. Main App ---
 
@@ -311,6 +273,9 @@ else:
                         if 'current_breed' not in st.session_state or st.session_state.current_breed != display_name:
                             st.session_state.current_breed = display_name
                             st.session_state.fun_fact = generate_fun_fact(display_name)
+                        
+                        # 3. Celebration (REMOVED)
+                        # st.balloons() # Removed as requested
 
                         # 4. RESULT CARD
                         st.markdown(f"""
