@@ -64,7 +64,7 @@ def add_custom_css():
         
         /* Dark minimalist background */
         .stApp {
-            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
+            background: #000000;
             font-family: 'Inter', sans-serif;
         }
         
@@ -94,58 +94,52 @@ def add_custom_css():
             background: rgba(30, 30, 46, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(96, 165, 250, 0.3);
-            padding: 20px;
-            border-radius: 16px;
+            padding: 16px 20px;
+            border-radius: 12px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             text-align: center;
-            margin-top: 20px;
-            margin-bottom: 20px;
+            margin-top: 16px;
+            margin-bottom: 16px;
         }
         
         .result-card h2 {
-            font-size: 1.1rem;
-            margin-bottom: 8px;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
         }
         
         .result-card h1 {
-            font-size: 2.2rem;
+            font-size: 2rem;
             margin-top: 0;
+            margin-bottom: 0;
         }
         
         /* Modern info box */
         .fun-fact-box {
             background: rgba(59, 130, 246, 0.1);
             border: 1px solid rgba(96, 165, 250, 0.3);
-            padding: 16px;
-            border-radius: 12px;
+            padding: 14px;
+            border-radius: 10px;
             border-left: 4px solid #60a5fa;
-            margin-top: 16px;
-            font-size: 0.95rem;
+            margin-top: 14px;
+            font-size: 0.9rem;
             color: #d1d5db;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         }
         
-        .fact-header {
+        .fact-container {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
+            align-items: flex-start;
+            gap: 10px;
         }
         
-        .refresh-btn {
-            background: rgba(96, 165, 250, 0.2);
-            border: 1px solid rgba(96, 165, 250, 0.4);
-            color: #60a5fa;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .fact-text {
+            flex: 1;
         }
         
-        .refresh-btn:hover {
-            background: rgba(96, 165, 250, 0.3);
-            border-color: rgba(96, 165, 250, 0.6);
+        .refresh-btn-container {
+            display: flex;
+            align-items: flex-start;
+            padding-top: 2px;
         }
         
         /* Clean file uploader */
@@ -178,10 +172,12 @@ def add_custom_css():
             color: white;
             border-radius: 8px;
             font-family: 'Inter', sans-serif;
-            padding: 10px 24px;
+            padding: 8px 16px;
             border: none;
             font-weight: 600;
             transition: all 0.2s ease;
+            font-size: 1rem;
+            min-height: 38px;
         }
         
         .stButton button:hover {
@@ -306,16 +302,21 @@ else:
                     </div>
                     """, unsafe_allow_html=True)
 
-                    # Fun fact with refresh button
-                    col_fact, col_btn = st.columns([4, 1])
-                    with col_fact:
-                        st.markdown(f"""
-                        <div class="fun-fact-box">
-                            <b>💡 Fun Fact:</b> {st.session_state.fun_fact}
+                    # Fun fact with refresh button (properly aligned)
+                    st.markdown(f"""
+                    <div class="fun-fact-box">
+                        <div class="fact-container">
+                            <div class="fact-text">
+                                <b>💡 Fun Fact:</b> {st.session_state.fun_fact}
+                            </div>
                         </div>
-                        """, unsafe_allow_html=True)
-                    with col_btn:
-                        if st.button("🔄", help="Get new fact"):
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Place button below the fact box, aligned to the right
+                    col1, col2, col3 = st.columns([3, 1, 1])
+                    with col3:
+                        if st.button("🔄 New Fact", key="refresh_fact"):
                             st.session_state.fun_fact = generate_fun_fact(display_name)
                             st.rerun()
                     
