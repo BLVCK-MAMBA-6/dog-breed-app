@@ -50,10 +50,50 @@ Predicted breed name is passed to the Gemini API → returns a **short fun fact*
 ---
 
 ## 📦 Installation
-
 To run this project locally:
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/your-username/dog-breed-app.git
-cd dog-breed-app
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/your-username/dog-breed-app.git](https://github.com/your-username/dog-breed-app.git)
+    cd dog-breed-app
+    ```
+
+2.  **Create a virtual environment (Recommended):**
+    *It is highly recommended to use Python 3.9 or 3.10 for TensorFlow compatibility.*
+    ```bash
+    conda create -n dog-app python=3.10
+    conda activate dog-app
+    ```
+
+3.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Set up API Keys:**
+    * Create a `.streamlit` folder in the root directory.
+    * Create a `secrets.toml` file inside it.
+    * Add your Google Gemini API key:
+        ```toml
+        GEMINI_API_KEY = "your_api_key_here"
+        ```
+
+5.  **Run the app:**
+    ```bash
+    streamlit run app.py
+    ```
+
+---
+
+## 📊 Dataset
+The model was trained on the **Kaggle Dog Breed Identification dataset**, which is a subset of the famous Stanford Dogs Dataset.
+
+---
+
+## 🤝 Contributing
+Contributions are welcome! Feel free to open an issue or submit a pull request.
+
+---
+
+## 📝 License
+This project is licensed under the MIT License.
